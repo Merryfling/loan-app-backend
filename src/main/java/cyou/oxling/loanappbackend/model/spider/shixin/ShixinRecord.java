@@ -1,5 +1,6 @@
 package cyou.oxling.loanappbackend.model.spider.shixin;
 
+import cyou.oxling.loanappbackend.annotation.Encrypted;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -7,7 +8,7 @@ import java.time.LocalDateTime;
 /**
  * 失信记录实体类
  * 字段说明：
- * idCard - 身份证号（主键）
+ * idCard - 身份证号（主键），已启用AES加密保护
  * isShixin - 是否为失信人（0=否，1=是）
  * name - 失信人姓名
  * caseCode - 案件编号
@@ -30,7 +31,9 @@ public class ShixinRecord {
      */
     public static final int IS_SHIXIN = 1;
 
+    @Encrypted("身份证号")
     private String idCard;
+    
     private Integer isShixin;
     private String name;
     private String caseCode;

@@ -1,5 +1,6 @@
 package cyou.oxling.loanappbackend.model.user;
 
+import cyou.oxling.loanappbackend.annotation.Encrypted;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,8 +13,8 @@ import java.util.Date;
  * id - 主键ID
  * userId - 用户ID，关联user_info表
  * name - 真实姓名
- * idCardNo - 身份证号，敏感信息，需考虑加密或脱敏
- * bankCardNo - 银行卡号，默认用来自动还款，需考虑加密或脱敏
+ * idCardNo - 身份证号，敏感信息，已启用AES加密保护
+ * bankCardNo - 银行卡号，默认用来自动还款，已启用AES加密保护
  * birthday - 生日，可根据身份证号提取，也可单独存储
  * gender - 性别 男 1 ; 女 2
  * address - 联系地址
@@ -28,8 +29,13 @@ public class UserProfile {
     private Long id;
     private Long userId;
     private String name;
+    
+    @Encrypted("身份证号")
     private String idCardNo;
+    
+    @Encrypted("银行卡号")
     private String bankCardNo;
+    
     private Date birthday;
     private int gender;
     private String address;
