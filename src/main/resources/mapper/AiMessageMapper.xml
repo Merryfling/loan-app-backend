@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cyou.oxling.loanappbackend.dao.AiMessageDao">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_message (session_id, role, content, created_at)
+        VALUES (#{sessionId}, #{role}, #{content}, #{createdAt})
+    </insert>
+
+    <select id="listBySessionId" resultType="cyou.oxling.loanappbackend.model.ai.AiMessage">
+        SELECT * FROM ai_message
+        WHERE session_id = #{sessionId}
+        ORDER BY created_at ASC
+    </select>
+
+</mapper>

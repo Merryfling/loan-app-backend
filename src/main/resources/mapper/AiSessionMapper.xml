@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cyou.oxling.loanappbackend.dao.AiSessionDao">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_session (user_id, session_code, title, created_at, updated_at)
+        VALUES (#{userId}, #{sessionCode}, #{title}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update">
+        UPDATE ai_session
+        SET title = #{title},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <select id="findBySessionCode" resultType="cyou.oxling.loanappbackend.model.ai.AiSession">
+        SELECT * FROM ai_session
+        WHERE session_code = #{sessionCode}
+    </select>
+
+    <select id="listByUserId" resultType="cyou.oxling.loanappbackend.model.ai.AiSession">
+        SELECT * FROM ai_session
+        WHERE user_id = #{userId}
+        ORDER BY updated_at DESC
+    </select>
+
+</mapper>
