@@ -20,6 +20,7 @@ import cyou.oxling.loanappbackend.dao.MlTaskQueueDao;
 import cyou.oxling.loanappbackend.dao.UserDao;
 import cyou.oxling.loanappbackend.dao.UserReportDao;
 import cyou.oxling.loanappbackend.dto.ml.MlEvalResultDTO;
+import cyou.oxling.loanappbackend.dto.ml.MlPredictionResponse;
 import cyou.oxling.loanappbackend.dto.ml.UserReportDTO;
 import cyou.oxling.loanappbackend.exception.BusinessException;
 import cyou.oxling.loanappbackend.model.ml.MlEvalResult;
@@ -28,6 +29,7 @@ import cyou.oxling.loanappbackend.model.ml.MlTaskQueue;
 import cyou.oxling.loanappbackend.model.user.UserCredit;
 import cyou.oxling.loanappbackend.model.user.UserInfo;
 import cyou.oxling.loanappbackend.model.user.UserReport;
+import cyou.oxling.loanappbackend.service.MlModelClient;
 import cyou.oxling.loanappbackend.service.MlService;
 import cyou.oxling.loanappbackend.service.MlTaskProcessor;
 
@@ -60,6 +62,9 @@ public class MlServiceImpl implements MlService {
     @Autowired
     private MlTaskProcessor mlTaskProcessor;
     
+    @Autowired
+    private MlModelClient mlModelClient;
+    
     @Value("${ml.task.retry.interval:300000}") // 默认5分钟
     private long retryInterval;
     
@@ -83,16 +88,16 @@ public class MlServiceImpl implements MlService {
         UserReport userReport = new UserReport();
         userReport.setUserId(userReportDTO.getUserId());
         userReport.setStatus(UserReport.STATUS_PENDING);
-        userReport.setOverdue30pCnt2y(userReportDTO.getOverdue30pCnt2y());
-        userReport.setOpenCreditLinesCnt(userReportDTO.getOpenCreditLinesCnt());
-        userReport.setEarliestCreditOpenDate(userReportDTO.getEarliestCreditOpenDate());
-        userReport.setDerogCnt(userReportDTO.getDerogCnt());
-        userReport.setPublicRecordCleanCnt(userReportDTO.getPublicRecordCleanCnt());
-        userReport.setHousingStatus(userReportDTO.getHousingStatus());
-        userReport.setPotentialLoanPurpose(userReportDTO.getPotentialLoanPurpose());
-        userReport.setExtEarlyAmtTotal(userReportDTO.getExtEarlyAmtTotal());
-        userReport.setExtEarlyCntTotal(userReportDTO.getExtEarlyCntTotal());
-        userReport.setExtEarlyAmt3m(userReportDTO.getExtEarlyAmt3m());
+        userReport.setRevolvingUtilizationOfUnsecuredLines(userReportDTO.getRevolvingUtilizationOfUnsecuredLines());
+        userReport.setAge(userReportDTO.getAge());
+        userReport.setNumberOfTime30To59DaysPastDueNotWorse(userReportDTO.getNumberOfTime30To59DaysPastDueNotWorse());
+        userReport.setDebtRatio(userReportDTO.getDebtRatio());
+        userReport.setMonthlyIncome(userReportDTO.getMonthlyIncome());
+        userReport.setNumberOfOpenCreditLinesAndLoans(userReportDTO.getNumberOfOpenCreditLinesAndLoans());
+        userReport.setNumberOfTimes90DaysLate(userReportDTO.getNumberOfTimes90DaysLate());
+        userReport.setNumberRealEstateLoansOrLines(userReportDTO.getNumberRealEstateLoansOrLines());
+        userReport.setNumberOfTime60To89DaysPastDueNotWorse(userReportDTO.getNumberOfTime60To89DaysPastDueNotWorse());
+        userReport.setNumberOfDependents(userReportDTO.getNumberOfDependents());
         
         // 设置过期时间（90天）
         Calendar calendar = Calendar.getInstance();
@@ -195,18 +200,16 @@ public class MlServiceImpl implements MlService {
         // 构建特征JSON
         Map<String, Object> featureMap = new HashMap<>();
         featureMap.put("userId", userId);
-        featureMap.put("overdue30pCnt2y", userReport.getOverdue30pCnt2y());
-        featureMap.put("openCreditLinesCnt", userReport.getOpenCreditLinesCnt());
-        featureMap.put("earliestCreditOpenDate", userReport.getEarliestCreditOpenDate());
-        featureMap.put("derogCnt", userReport.getDerogCnt());
-        featureMap.put("publicRecordCleanCnt", userReport.getPublicRecordCleanCnt());
-        featureMap.put("housingStatus", userReport.getHousingStatus());
-        featureMap.put("potentialLoanPurpose", userReport.getPotentialLoanPurpose());
-        featureMap.put("extEarlyAmtTotal", userReport.getExtEarlyAmtTotal());
-        featureMap.put("extEarlyCntTotal", userReport.getExtEarlyCntTotal());
-        featureMap.put("extEarlyAmt3m", userReport.getExtEarlyAmt3m());
-        
-        // 添加其他可能的特征...
+        featureMap.put("revolvingUtilizationOfUnsecuredLines", userReport.getRevolvingUtilizationOfUnsecuredLines());
+        featureMap.put("age", userReport.getAge());
+        featureMap.put("numberOfTime30To59DaysPastDueNotWorse", userReport.getNumberOfTime30To59DaysPastDueNotWorse());
+        featureMap.put("debtRatio", userReport.getDebtRatio());
+        featureMap.put("monthlyIncome", userReport.getMonthlyIncome());
+        featureMap.put("numberOfOpenCreditLinesAndLoans", userReport.getNumberOfOpenCreditLinesAndLoans());
+        featureMap.put("numberOfTimes90DaysLate", userReport.getNumberOfTimes90DaysLate());
+        featureMap.put("numberRealEstateLoansOrLines", userReport.getNumberRealEstateLoansOrLines());
+        featureMap.put("numberOfTime60To89DaysPastDueNotWorse", userReport.getNumberOfTime60To89DaysPastDueNotWorse());
+        featureMap.put("numberOfDependents", userReport.getNumberOfDependents());
         
         String featureJson;
         try {
@@ -295,13 +298,23 @@ public class MlServiceImpl implements MlService {
                 throw new BusinessException("特征快照不存在");
             }
             
-            // TODO: 调用ML模型进行评估
-            // 这里应该是调用外部ML服务或本地ML模型进行评估
-            // 返回信用分和信用额度
+            // 获取用户自报信息
+            UserReport userReport = userReportDao.findLatestByUserId(taskQueue.getUserId());
+            if (userReport == null) {
+                throw new BusinessException("用户自报信息不存在");
+            }
             
-            // 模拟评估结果
-            Integer creditScore = 700;  // 模拟信用分
-            java.math.BigDecimal creditLimit = new java.math.BigDecimal("10000");  // 模拟信用额度
+            // 调用ML模型进行评估
+            MlPredictionResponse prediction = mlModelClient.predict(
+                    mlModelClient.buildFeatures(userReport));
+            
+            // 从ML响应中获取信用额度
+            java.math.BigDecimal creditLimit = new java.math.BigDecimal(prediction.getLimit());
+            
+            // 计算信用分（基于违约概率转换）
+            Integer creditScore = prediction.getPd() != null 
+                    ? Math.min(100, Math.max(0, (int)((1 - prediction.getPd().doubleValue()) * 100)))
+                    : 70;
             
             // 创建评估结果
             MlEvalResult evalResult = new MlEvalResult();
@@ -309,7 +322,7 @@ public class MlServiceImpl implements MlService {
             evalResult.setSnapshotId(taskQueue.getSnapshotId());
             evalResult.setCreditScore(creditScore);
             evalResult.setCreditLimit(creditLimit);
-            evalResult.setModelVer("v1.0");  // 模型版本
+            evalResult.setModelVer("v2.0");  // 新模型版本
             evalResult.setCreateTime(new Date());
             
             // 设置过期时间（90天）

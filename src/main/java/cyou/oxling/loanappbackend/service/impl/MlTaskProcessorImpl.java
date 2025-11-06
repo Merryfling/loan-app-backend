@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -19,11 +18,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import cyou.oxling.loanappbackend.dao.MlEvalResultDao;
+import cyou.oxling.loanappbackend.dao.MlFeatureSnapshotDao;
 import cyou.oxling.loanappbackend.dao.MlTaskQueueDao;
 import cyou.oxling.loanappbackend.dao.UserDao;
+import cyou.oxling.loanappbackend.dao.UserReportDao;
+import cyou.oxling.loanappbackend.dto.ml.MlPredictionResponse;
 import cyou.oxling.loanappbackend.model.ml.MlEvalResult;
+import cyou.oxling.loanappbackend.model.ml.MlFeatureSnapshot;
 import cyou.oxling.loanappbackend.model.ml.MlTaskQueue;
 import cyou.oxling.loanappbackend.model.user.UserCredit;
+import cyou.oxling.loanappbackend.model.user.UserReport;
+import cyou.oxling.loanappbackend.service.MlModelClient;
 import cyou.oxling.loanappbackend.service.MlTaskProcessor;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -49,9 +54,17 @@ public class MlTaskProcessorImpl implements MlTaskProcessor {
     private UserDao userDao;
     
     @Autowired
+    private MlFeatureSnapshotDao mlFeatureSnapshotDao;
+    
+    @Autowired
+    private UserReportDao userReportDao;
+    
+    @Autowired
+    private MlModelClient mlModelClient;
+    
+    @Autowired
     private StringRedisTemplate redisTemplate;
     
-    private final Random random = new Random();
     private boolean running = true;
     private ExecutorService executorService;
     private AtomicBoolean processingActive = new AtomicBoolean(false);
@@ -251,12 +264,33 @@ public class MlTaskProcessorImpl implements MlTaskProcessor {
             }
             
             try {
-                // 模拟处理延迟 (200-700ms)
-                Thread.sleep(200 + random.nextInt(500));
+                // 获取特征快照
+                MlFeatureSnapshot snapshot = mlFeatureSnapshotDao.findById(task.getSnapshotId());
+                if (snapshot == null) {
+                    logger.error("Feature snapshot not found for task: {}", task.getId());
+                    mlTaskQueueDao.updateStatus(task.getId(), MlTaskQueue.STATUS_FAILED, 
+                            task.getRetries(), null);
+                    continue;
+                }
                 
-                // 模拟评估结果
-                int creditScore = 40 + random.nextInt(51); // 40-90
-                BigDecimal creditLimit = new BigDecimal(5000 + random.nextInt(10001)); // 5000-15000
+                // 获取用户自报信息
+                UserReport userReport = userReportDao.findLatestByUserId(task.getUserId());
+                if (userReport == null) {
+                    logger.error("User report not found for task: {}", task.getId());
+                    mlTaskQueueDao.updateStatus(task.getId(), MlTaskQueue.STATUS_FAILED, 
+                            task.getRetries(), null);
+                    continue;
+                }
+                
+                // 调用ML模型进行评估
+                MlPredictionResponse prediction = mlModelClient.predict(
+                        mlModelClient.buildFeatures(userReport));
+                
+                // 从ML响应中获取信用额度和信用分
+                BigDecimal creditLimit = new BigDecimal(prediction.getLimit());
+                int creditScore = prediction.getPd() != null 
+                        ? Math.min(100, Math.max(0, (int)((1 - prediction.getPd().doubleValue()) * 100)))
+                        : 70;
                 
                 // 创建评估结果
                 MlEvalResult evalResult = new MlEvalResult();
@@ -264,7 +298,7 @@ public class MlTaskProcessorImpl implements MlTaskProcessor {
                 evalResult.setSnapshotId(task.getSnapshotId());
                 evalResult.setCreditScore(creditScore);
                 evalResult.setCreditLimit(creditLimit);
-                evalResult.setModelVer("mock-v1.0");
+                evalResult.setModelVer("v2.0");
                 evalResult.setCreateTime(new Date());
                 
                 // 设置过期时间（90天）
@@ -281,7 +315,7 @@ public class MlTaskProcessorImpl implements MlTaskProcessor {
                     userCredit.setCreditScore(creditScore);
                     userCredit.setCreditLimit(creditLimit);
                     userCredit.setEvaluating(UserCredit.EVAL_STATUS_STABLE);
-                    userCredit.setModelVer("mock-v1.0");
+                    userCredit.setModelVer("v2.0");
                     userCredit.setUpdateTime(new Date());
                     userDao.updateUserCredit(userCredit);
                 }

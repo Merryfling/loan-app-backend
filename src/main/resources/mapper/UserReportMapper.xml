@@ -5,27 +5,32 @@
     <!-- 保存用户自报信息 -->
     <insert id="saveUserReport" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO user_report (
-            user_id, status, overdue_30p_cnt_2y, open_credit_lines_cnt, earliest_credit_open_date,
-            derog_cnt, public_record_clean_cnt, housing_status, potential_loan_purpose,
-            ext_early_amt_total, ext_early_cnt_total, ext_early_amt_3m,
-            create_time, expire_time
+            user_id, status, revolving_utilization_of_unsecured_lines, age, 
+            number_of_time_30_to_59_days_past_due_not_worse, debt_ratio, monthly_income,
+            number_of_open_credit_lines_and_loans, number_of_times_90_days_late,
+            number_real_estate_loans_or_lines, number_of_time_60_to_89_days_past_due_not_worse,
+            number_of_dependents, create_time, expire_time
         ) VALUES (
-            #{userId}, #{status}, #{overdue30pCnt2y}, #{openCreditLinesCnt}, #{earliestCreditOpenDate},
-            #{derogCnt}, #{publicRecordCleanCnt}, #{housingStatus}, #{potentialLoanPurpose},
-            #{extEarlyAmtTotal}, #{extEarlyCntTotal}, #{extEarlyAmt3m},
-            #{createTime}, #{expireTime}
+            #{userId}, #{status}, #{revolvingUtilizationOfUnsecuredLines}, #{age},
+            #{numberOfTime30To59DaysPastDueNotWorse}, #{debtRatio}, #{monthlyIncome},
+            #{numberOfOpenCreditLinesAndLoans}, #{numberOfTimes90DaysLate},
+            #{numberRealEstateLoansOrLines}, #{numberOfTime60To89DaysPastDueNotWorse},
+            #{numberOfDependents}, #{createTime}, #{expireTime}
         )
     </insert>
     
     <!-- 根据ID查询用户自报信息 -->
     <select id="findById" resultType="cyou.oxling.loanappbackend.model.user.UserReport">
         SELECT 
-            id, user_id as userId, status, overdue_30p_cnt_2y as overdue30pCnt2y,
-            open_credit_lines_cnt as openCreditLinesCnt, earliest_credit_open_date as earliestCreditOpenDate,
-            derog_cnt as derogCnt, public_record_clean_cnt as publicRecordCleanCnt,
-            housing_status as housingStatus, potential_loan_purpose as potentialLoanPurpose,
-            ext_early_amt_total as extEarlyAmtTotal, ext_early_cnt_total as extEarlyCntTotal,
-            ext_early_amt_3m as extEarlyAmt3m,
+            id, user_id as userId, status,
+            revolving_utilization_of_unsecured_lines as revolvingUtilizationOfUnsecuredLines,
+            age, number_of_time_30_to_59_days_past_due_not_worse as numberOfTime30To59DaysPastDueNotWorse,
+            debt_ratio as debtRatio, monthly_income as monthlyIncome,
+            number_of_open_credit_lines_and_loans as numberOfOpenCreditLinesAndLoans,
+            number_of_times_90_days_late as numberOfTimes90DaysLate,
+            number_real_estate_loans_or_lines as numberRealEstateLoansOrLines,
+            number_of_time_60_to_89_days_past_due_not_worse as numberOfTime60To89DaysPastDueNotWorse,
+            number_of_dependents as numberOfDependents,
             create_time as createTime, expire_time as expireTime
         FROM user_report 
         WHERE id = #{id}
@@ -34,12 +39,15 @@
     <!-- 根据用户ID查询最新的用户自报信息 -->
     <select id="findLatestByUserId" resultType="cyou.oxling.loanappbackend.model.user.UserReport">
         SELECT 
-            id, user_id as userId, status, overdue_30p_cnt_2y as overdue30pCnt2y,
-            open_credit_lines_cnt as openCreditLinesCnt, earliest_credit_open_date as earliestCreditOpenDate,
-            derog_cnt as derogCnt, public_record_clean_cnt as publicRecordCleanCnt,
-            housing_status as housingStatus, potential_loan_purpose as potentialLoanPurpose,
-            ext_early_amt_total as extEarlyAmtTotal, ext_early_cnt_total as extEarlyCntTotal,
-            ext_early_amt_3m as extEarlyAmt3m,
+            id, user_id as userId, status,
+            revolving_utilization_of_unsecured_lines as revolvingUtilizationOfUnsecuredLines,
+            age, number_of_time_30_to_59_days_past_due_not_worse as numberOfTime30To59DaysPastDueNotWorse,
+            debt_ratio as debtRatio, monthly_income as monthlyIncome,
+            number_of_open_credit_lines_and_loans as numberOfOpenCreditLinesAndLoans,
+            number_of_times_90_days_late as numberOfTimes90DaysLate,
+            number_real_estate_loans_or_lines as numberRealEstateLoansOrLines,
+            number_of_time_60_to_89_days_past_due_not_worse as numberOfTime60To89DaysPastDueNotWorse,
+            number_of_dependents as numberOfDependents,
             create_time as createTime, expire_time as expireTime
         FROM user_report 
         WHERE user_id = #{userId}
@@ -50,12 +58,15 @@
     <!-- 根据用户ID查询所有用户自报信息 -->
     <select id="findAllByUserId" resultType="cyou.oxling.loanappbackend.model.user.UserReport">
         SELECT 
-            id, user_id as userId, status, overdue_30p_cnt_2y as overdue30pCnt2y,
-            open_credit_lines_cnt as openCreditLinesCnt, earliest_credit_open_date as earliestCreditOpenDate,
-            derog_cnt as derogCnt, public_record_clean_cnt as publicRecordCleanCnt,
-            housing_status as housingStatus, potential_loan_purpose as potentialLoanPurpose,
-            ext_early_amt_total as extEarlyAmtTotal, ext_early_cnt_total as extEarlyCntTotal,
-            ext_early_amt_3m as extEarlyAmt3m,
+            id, user_id as userId, status,
+            revolving_utilization_of_unsecured_lines as revolvingUtilizationOfUnsecuredLines,
+            age, number_of_time_30_to_59_days_past_due_not_worse as numberOfTime30To59DaysPastDueNotWorse,
+            debt_ratio as debtRatio, monthly_income as monthlyIncome,
+            number_of_open_credit_lines_and_loans as numberOfOpenCreditLinesAndLoans,
+            number_of_times_90_days_late as numberOfTimes90DaysLate,
+            number_real_estate_loans_or_lines as numberRealEstateLoansOrLines,
+            number_of_time_60_to_89_days_past_due_not_worse as numberOfTime60To89DaysPastDueNotWorse,
+            number_of_dependents as numberOfDependents,
             create_time as createTime, expire_time as expireTime
         FROM user_report 
         WHERE user_id = #{userId}
@@ -67,16 +78,16 @@
         UPDATE user_report
         SET 
             status = #{status},
-            overdue_30p_cnt_2y = #{overdue30pCnt2y},
-            open_credit_lines_cnt = #{openCreditLinesCnt},
-            earliest_credit_open_date = #{earliestCreditOpenDate},
-            derog_cnt = #{derogCnt},
-            public_record_clean_cnt = #{publicRecordCleanCnt},
-            housing_status = #{housingStatus},
-            potential_loan_purpose = #{potentialLoanPurpose},
-            ext_early_amt_total = #{extEarlyAmtTotal},
-            ext_early_cnt_total = #{extEarlyCntTotal},
-            ext_early_amt_3m = #{extEarlyAmt3m},
+            revolving_utilization_of_unsecured_lines = #{revolvingUtilizationOfUnsecuredLines},
+            age = #{age},
+            number_of_time_30_to_59_days_past_due_not_worse = #{numberOfTime30To59DaysPastDueNotWorse},
+            debt_ratio = #{debtRatio},
+            monthly_income = #{monthlyIncome},
+            number_of_open_credit_lines_and_loans = #{numberOfOpenCreditLinesAndLoans},
+            number_of_times_90_days_late = #{numberOfTimes90DaysLate},
+            number_real_estate_loans_or_lines = #{numberRealEstateLoansOrLines},
+            number_of_time_60_to_89_days_past_due_not_worse = #{numberOfTime60To89DaysPastDueNotWorse},
+            number_of_dependents = #{numberOfDependents},
             expire_time = #{expireTime}
         WHERE id = #{id}
     </update>

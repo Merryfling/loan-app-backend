@@ -558,27 +558,17 @@ public class UserServiceImpl implements UserService {
         UserReportDTO userReportDTO = new UserReportDTO();
         userReportDTO.setUserId(userId);
         
-        // 从DTO中提取数据
-        userReportDTO.setOverdue30pCnt2y(reportRequestDTO.getOverdue30pCnt2y());
-        userReportDTO.setOpenCreditLinesCnt(reportRequestDTO.getOpenCreditLinesCnt());
-        
-        // 转换日期字符串为Date
-        if (reportRequestDTO.getEarliestCreditOpenDate() != null) {
-            try {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                userReportDTO.setEarliestCreditOpenDate(sdf.parse(reportRequestDTO.getEarliestCreditOpenDate()));
-            } catch (Exception e) {
-                throw new BusinessException("日期格式不正确");
-            }
-        }
-        
-        userReportDTO.setDerogCnt(reportRequestDTO.getDerogCnt());
-        userReportDTO.setPublicRecordCleanCnt(reportRequestDTO.getPublicRecordCleanCnt());
-        userReportDTO.setHousingStatus(reportRequestDTO.getHousingStatus());
-        userReportDTO.setPotentialLoanPurpose(reportRequestDTO.getPotentialLoanPurpose());
-        userReportDTO.setExtEarlyAmtTotal(reportRequestDTO.getExtEarlyAmtTotal());
-        userReportDTO.setExtEarlyCntTotal(reportRequestDTO.getExtEarlyCntTotal());
-        userReportDTO.setExtEarlyAmt3m(reportRequestDTO.getExtEarlyAmt3m());
+        // 从DTO中提取新的ML模型参数
+        userReportDTO.setRevolvingUtilizationOfUnsecuredLines(reportRequestDTO.getRevolvingUtilizationOfUnsecuredLines());
+        userReportDTO.setAge(reportRequestDTO.getAge());
+        userReportDTO.setNumberOfTime30To59DaysPastDueNotWorse(reportRequestDTO.getNumberOfTime30To59DaysPastDueNotWorse());
+        userReportDTO.setDebtRatio(reportRequestDTO.getDebtRatio());
+        userReportDTO.setMonthlyIncome(reportRequestDTO.getMonthlyIncome());
+        userReportDTO.setNumberOfOpenCreditLinesAndLoans(reportRequestDTO.getNumberOfOpenCreditLinesAndLoans());
+        userReportDTO.setNumberOfTimes90DaysLate(reportRequestDTO.getNumberOfTimes90DaysLate());
+        userReportDTO.setNumberRealEstateLoansOrLines(reportRequestDTO.getNumberRealEstateLoansOrLines());
+        userReportDTO.setNumberOfTime60To89DaysPastDueNotWorse(reportRequestDTO.getNumberOfTime60To89DaysPastDueNotWorse());
+        userReportDTO.setNumberOfDependents(reportRequestDTO.getNumberOfDependents());
         
         // 提交用户自报信息
         Long snapshotId = mlService.submitUserReport(userReportDTO);
